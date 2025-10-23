@@ -4,6 +4,9 @@
 #include <Arduino.h>
 
 
+#define	G_POS_BUFF_BYTES	40
+
+
 enum quad {
 	north,
 	south,
@@ -22,8 +25,6 @@ extern double deg2rad(double angleDeg);
 // **********************************************
 // ****************  globalPos  *****************
 // **********************************************
-
-#define	G_POS_BUFF_BYTES	40
 
 class globalPos {
 
