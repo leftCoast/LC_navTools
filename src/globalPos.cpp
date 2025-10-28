@@ -444,10 +444,10 @@ double globalPos::distanceTo(globalPos* inDest) {
 // This assumes the values are "good" IE in range. Otherwise you'll get wacky answers.
 char* globalPos::getLatStr(void) {
 
-	char	tempStr[G_POS_BUFF_BYTES];
-	int	lMin;
+	char		tempStr[G_POS_BUFF_BYTES];
+	int		lMin;
 	double	lMinDec;
-	int	lMinOut;
+	int		lMinOut;
 	
 	sprintf(tempStr,"%03u",latDeg);
 	strcpy(outStr,tempStr);
