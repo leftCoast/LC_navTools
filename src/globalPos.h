@@ -33,9 +33,11 @@ enum posFormat {
 // Need a position packed up for passing about?
 struct gPosPack {
 
+	bool		latValid;
 	int		latDeg;
 	double	latMin;
 	quad		latQuad;
+	bool		lonValid;
 	int		lonDeg;
 	double	lonMin;
 	quad		lonQuad;
@@ -71,13 +73,13 @@ class posParser :	public lilParser {
 				gPosPack	parsePos(const char* inLatPos,const char* inLonPos);
 				void		parseStr(const char* inStr);
 				void		cleanParam(char* inParam);
-				bool		parseLat(void);
-				bool		parseLon(void);
+				void		parseLat(void);
+				void		parseLon(void);
 				
 				gPosPack	ourPos;
 };
 	
-	
+
 
 // **********************************************
 // ****************  globalPos  *****************

@@ -4,6 +4,8 @@
 #include <mapper.h>
 #include <strTools.h>
 
+#include <debug.h>
+
 //#define RADIUS_EARTH_KNOTS  3443.98		// Calculated this from www map.
 //#define RADIUS_EARTH_KNOTS  3440			// Saw this on google earth.
 #define RADIUS_EARTH_KNOTS  3443.92			// Google's unit calculator gives this.
@@ -22,9 +24,11 @@ double deg2rad(double angleDeg) { return angleDeg*M_PI/180.0; }
 
 double hav(double theta) { return ((1-cos(theta))/2.0); }		// Haversine function
 
-mapper degMinMapper(0,1,0,60);
-mapper secMinMapper(0,60,0,1);
+mapper		degMinMapper(0,1,0,60);
+mapper 		secMinMapper(0,60,0,1);
+posParser	ourPosParser;
 
+	
 // **********************************************
 // ****************   posParser  ****************
 // **********************************************
@@ -59,30 +63,23 @@ void posParser::parseStr(const char* inStr) {
 
 // Pass in lat and lon strings and this should return a packed position.
 gPosPack	posParser::parsePos(const char* inLatPos,const char* inLonPos) {
-
-	bool		gotLat;
-	bool		gotLon;
 	
-	gotLat = false;
-	gotLon = false;
+	ourPos.latValid = false;
+	ourPos.lonValid = false;
 	if (inLatPos && inLonPos) {						// Sanity non NULL..
 		parseStr("LAT ");
 		parseStr(inLatPos);
 		if (addChar('\n')==latCmd) {
-			gotLat = parseLat();
+			parseLat();
 		}
 		parseStr("LON ");
 		parseStr(inLonPos);
 		if (addChar('\n')==lonCmd) {
-			gotLon = parseLon();
-		}
-		if (gotLat && gotLon) {
-			return ourPos;
+			parseLon();
 		}
 	}
 	return nullPos; 
 }
-
 
 
 void posParser::cleanParam(char* inParam) {
@@ -92,7 +89,7 @@ void posParser::cleanParam(char* inParam) {
 	if (inParam) {
 		upCase(inParam);
 		i = 0;
-		while(inParam) {
+		while(inParam[i]!='\0') {
 			if (inParam[i]>='A'&&inParam[i]<='Z') i++;
 			else if (inParam[i]>='0'&&inParam[i]<='9') i++;
 			else if (inParam[i]=='-'||inParam[i]=='.') i++;
@@ -103,7 +100,7 @@ void posParser::cleanParam(char* inParam) {
 
 
 // We are being told that this should be a latitude string.
-bool posParser::parseLat(void) {
+void posParser::parseLat(void) {
 	
 	int			degAsInt;
 	double		degAsDbl;
@@ -253,12 +250,12 @@ bool posParser::parseLat(void) {
 	freeStr(&secondParam);
 	freeStr(&thirdParam);
 	freeStr(&fourthParam);
-	return success;
+	ourPos.latValid = success;
 }
 
 
 // We are being told that this should be a longitude string.
-bool posParser::parseLon(void) {
+void posParser::parseLon(void) {
 
 	int			degAsInt;
 	double		degAsDbl;
@@ -408,7 +405,7 @@ bool posParser::parseLon(void) {
 	freeStr(&secondParam);
 	freeStr(&thirdParam);
 	freeStr(&fourthParam);
-	return success;
+	ourPos.lonValid = success;
 }
 
 
@@ -472,8 +469,7 @@ int globalPos::copyFromEEPROM(int addr) {
 	return 2*sizeof(double);
 }
 
-				
-					
+								
 // I wanna' be like you euooo.
 void globalPos::copyPos(globalPos* aLatLon) {
 
@@ -638,11 +634,17 @@ void globalPos::setLon(double inLon) {
 				
 void globalPos::setPosValues(const char* latStr,const char* lonStr) {
 
-	setLatValue(latStr);
-	setLonValue(lonStr);
+	//setLatValue(latStr);
+	//setLonValue(lonStr);
+	gPosPack	aPos;
+	
+	aPos = ourPosParser.parsePos(latStr,lonStr);
+	if (aPos.latValid && aPos.lonValid) {
+		setPosition(aPos.latDeg,aPos.latMin,aPos.latQuad,aPos.lonDeg,aPos.lonMin,aPos.lonQuad);
+	}
 }
 
-	
+
 void globalPos::setQuads(const char*  inLatQuad,const char*  inLonQuad) {
 
 	setLatQuad(inLatQuad);
