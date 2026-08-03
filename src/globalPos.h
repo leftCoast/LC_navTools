@@ -16,6 +16,20 @@ enum quad {
 };
 
 
+enum posFormat {
+	floatDeg,
+	floatDeg_quad,
+	intDeg_floatMin_quad,
+	intDeg_intMin_intSec_quad,
+	intDeg_intMin_floatSec_quad,
+	quad_floatDeg,
+	quad_intDeg_floatMin	,
+	quad_intDeg_intMin_intSec	,
+	quad_intDeg_intMin_floatSec
+};
+
+
+
 // Need a position packed up for passing about?
 struct gPosPack {
 
@@ -51,11 +65,13 @@ enum parseCmd { noCmd, latCmd, lonCmd };
 class posParser :	public lilParser {
 
 	public:
-				latLonParser(void);
-	virtual	~latLonParser(void);
+				posParser(void);
+	virtual	~posParser(void);
 
 				gPosPack	parsePos(const char* inLatPos,const char* inLonPos);
-				bool		parseLat(void)
+				void		parseStr(const char* inStr);
+				void		cleanParam(char* inParam);
+				bool		parseLat(void);
 				bool		parseLon(void);
 				
 				gPosPack	ourPos;
@@ -126,7 +142,7 @@ class globalPos {
 				int64_t	getLatAsInt64(void);		// For NMEA2k messages.
 				int64_t	getLonAsInt64(void);		// For NMEA2k messages.
 				
-	protected:
+	//protected:
 				int		latDeg;
 				double	latMin;
 				quad		latQuad;
