@@ -6,6 +6,7 @@
 //#define RADIUS_EARTH_KNOTS  3440			// Saw this on google earth.
 #define RADIUS_EARTH_KNOTS  3443.92			// Google's unit calculator gives this.
 
+gPosPack nullPos = { 0,0,north,0,0,west };
 
 bool	checkLatDeg(int degrees) { return (degrees>=0 && degrees<90); }
 
@@ -18,6 +19,144 @@ double rad2deg(double angleRad) { return angleRad*180/M_PI; }
 double deg2rad(double angleDeg) { return angleDeg*M_PI/180.0; }
 
 double hav(double theta) { return ((1-cos(theta))/2.0); }		// Haversine function
+
+
+// **********************************************
+// ****************   posParser  ****************
+// **********************************************
+
+
+posParser::posParser(void) 
+	:lilParser() {
+	
+	addCmd(latCmd,"LAT");
+	addCmd(lonCmd,"LON");
+}
+	
+	
+posParser::~posParser(void) {  }
+
+
+// Just stuffs this string in ignoring the parsing result. Does NOT pass in the '\0' at
+// the end of the string.
+posParser::parseStr(const char* inStr) {
+
+	int	numChars;
+	
+	if (inStr) {
+		while(inStr[i]) {
+			addChar(inStr[i]);
+			i++;
+		}
+	}	
+}
+
+
+// Pass in lat and lon strings and this should return a packed position.
+gPosPack	posParser::parsePos(const char* inLatPos,const char* inLonPos) {
+
+	int		numChars;
+	bool		gotLat;
+	bool		gotLon;
+	
+	gotLat = false;
+	gotLon = false;
+	if (inLatPos && inLonPos) {						// Sanity non NULL..
+		parseStr = NULL;
+		parseStr("LAT ");
+		parseStr(inLatPos);
+		if (addChar('\n')==latCmd) {
+			gotLat = parseLat();
+		}
+		parseStr("LAT ");
+		parseStr(inLonPos);
+		if (addChar('\n')==lonCmd) {
+			gotLon = parseLon();
+		}
+		if (gotLat && gotLon) {
+			return ourPos;
+		}
+	}
+	return nullPos; 
+}
+
+
+// We are being told that this should be a latitude string.
+bool posParser::parseLat(void) {
+	
+	globalPos	aPos;
+	double		latAsDbl;
+	char*			firstParam;
+	char*			secondParam;
+	
+	paramStr = NULL;
+	secondParam = NULL;
+	switch(numParams()) {
+		case 1	:
+			latAsDbl = atof(getNextParam());
+			if (latAsDbl<=90 && latAsDbl>=-90) {
+				aPos.setLat(latAsDbl);
+				ourPos.latDeg(aPos.getLatDeg());
+				ourPos.latMin = aPos.getLatMin();
+				ourPos.latQuad = aPos.getLatQuad();
+				return true;
+			}
+		break;
+		case 2	:
+			heapstr(&firstParam,getNextParam());
+			upCase(firstParam);
+			if (firstParam[0]=='N') {
+				latAsDbl = atof(getNextParam());
+				if (latAsDbl<=90 && latAsDbl>=0) {
+					aPos.setLat(latAsDbl);
+					ourPos.latDeg(aPos.getLatDeg());
+					ourPos.latMin = aPos.getLatMin();
+					ourPos.latQuad = north;
+					return true;
+				}
+			} else if (firstParam[0]=='S') {
+				latAsDbl = atof(getNextParam());
+				if (latAsDbl<=90 && latAsDbl>=0) {
+					aPos.setLat(-latAsDbl);
+					ourPos.latDeg(aPos.getLatDeg());
+					ourPos.latMin = aPos.getLatMin();
+					ourPos.latQuad = south;
+					return true;
+				}
+			} else {
+				latAsDbl = atof(firstParam);
+				heapStr(&secondParam,getNextParam());
+				upCase(secondParam);
+				if (secondParam[0]=='N') {
+					if (latAsDbl<=90 && latAsDbl>=0) {
+						aPos.setLat(latAsDbl);
+						ourPos.latDeg(aPos.getLatDeg());
+						ourPos.latMin = aPos.getLatMin();
+						ourPos.latQuad = north;
+						return true;
+					}
+				} else if (secondParam[0]=='S') {
+					if (latAsDbl<=90 && latAsDbl>=0) {
+						aPos.setLat(-latAsDbl);
+						ourPos.latDeg(aPos.getLatDeg());
+						ourPos.latMin = aPos.getLatMin();
+						ourPos.latQuad = south;
+						return true;
+					}
+				}
+			}
+		break;
+		case 3	:
+		case 4	:
+}
+
+
+// We are being told that this should be a longitude string.
+bool posParser::parseLon(void) {
+
+}
+
+
 
 // **********************************************
 // ****************  globalPos  *****************
@@ -111,6 +250,24 @@ void globalPos::copyLon(globalPos* aLatLon) {
 	}
 }
 		
+
+
+
+
+void globalPos::setLatValue(const char* inLatStr) {
+
+	if (inLatStr) {															// Santy, non NULL.
+		switch(latLonStrType(inLatStr) {
+			case floatDeg							: break
+			case floatDeg_quad					: break;
+			case intDeg_floatMin_quad			: break;
+			case intDeg_intMin_intSec_quad	: break;
+			case intDeg_intMin_floatSec_quad	: break;
+			case quad_floatDeg					: break;
+			case quad_intDeg_floatMin			: break;
+			case quad_intDeg_intMin_intSec	: break;
+			case quad_intDeg_intMin_floatSec	: break;
+		}
 				
 // In the format DD MM.MMM	Does not look for Quadrent. See below.
 void globalPos::setLatValue(const char* inLatStr) {

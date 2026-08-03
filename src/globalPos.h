@@ -2,11 +2,12 @@
 #define globalPos_h
 
 #include <Arduino.h>
-
+#include <lilParser.h>
 
 #define	G_POS_BUFF_BYTES	40
 
 
+// Quadrant choices.
 enum quad {
 	north,
 	south,
@@ -15,12 +16,52 @@ enum quad {
 };
 
 
+// Need a position packed up for passing about?
+struct gPosPack {
+
+	int		latDeg;
+	double	latMin;
+	quad		latQuad;
+	int		lonDeg;
+	double	lonMin;
+	quad		lonQuad;
+};
+
+
+extern gPosPack nullPos;
 extern bool	checkLatDeg(int degrees);
 extern bool	checkLonDeg(int degrees);
 extern bool	checkMin(double minutes);
 extern double rad2deg(double angleRad);
 extern double deg2rad(double angleDeg);
 //extern double hav(double theta);
+
+
+
+
+
+// **********************************************
+// ****************   posParser  ****************
+// **********************************************
+
+
+enum parseCmd { noCmd, latCmd, lonCmd };
+
+
+class posParser :	public lilParser {
+
+	public:
+				latLonParser(void);
+	virtual	~latLonParser(void);
+
+				gPosPack	parsePos(const char* inLatPos,const char* inLonPos);
+				bool		parseLat(void)
+				bool		parseLon(void);
+				
+				gPosPack	ourPos;
+};
+	
+	
 
 // **********************************************
 // ****************  globalPos  *****************
