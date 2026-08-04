@@ -10,7 +10,7 @@
 //#define RADIUS_EARTH_KNOTS  3440			// Saw this on google earth.
 #define RADIUS_EARTH_KNOTS  3443.92			// Google's unit calculator gives this.
 
-gPosPack nullPos = { 0,0,north,0,0,west };
+gPosPack nullPos = { false,0,0,north,false,0,0,west };
 
 bool	checkLatDeg(int degrees) { return (degrees>=0 && degrees<90); }
 
@@ -118,12 +118,12 @@ void posParser::parseLat(void) {
 	char*			secStr;
 	bool			success;
 	
-	firstParam	= NULL;
-	secondParam	= NULL;
-	thirdParam	= NULL;
-	fourthParam	= NULL;
-	success = false;
-	switch(numParams()) {
+	firstParam	= NULL;																	// Set anything we'll allocate to NULL.
+	secondParam	= NULL;																	//
+	thirdParam	= NULL;																	//
+	fourthParam	= NULL;																	//
+	success = false;																		// Default to no success.
+	switch(numParams()) {																// Let's see how many prams we got.
 		case 1	:																			// We got one param. Signed double.
 			heapStr(&firstParam,getNextParam());									// Grab the param.
 			cleanParam(firstParam);														// Clean out gunk..
@@ -158,7 +158,7 @@ void posParser::parseLat(void) {
 			if (degAsDbl<=90 && degAsDbl>=0) {										// If sanity check passes..
 				degAsInt = trunc(degAsDbl);											// Save off the degree int.
 				degAsDbl = degAsDbl - degAsInt;										// Sub off the degree int.
-				minAsDbl = degMinMapper.map(degAsDbl);							 // Map the remainder to minutes.
+				minAsDbl = degMinMapper.map(degAsDbl);							 	// Map the remainder to minutes.
 				ourQuad = north;															// Assume north..
 				if (quadStr[0]=='S') {													// Unless it's an 'S'..
 					ourQuad = south;														// Then, hey, it's south.
@@ -167,10 +167,43 @@ void posParser::parseLat(void) {
 				ourPos.latMin	= minAsDbl;												//
 				ourPos.latQuad	= ourQuad;												//
 				success = true;															// We have been a success!
-			}
+			}																					//
 		break;																				//
 		case 3	:																			// Four prams, int deg, int min, double sec & quad
 			heapStr(&firstParam,getNextParam());									// Grab and clean the four params.
+			cleanParam(firstParam);														//
+			heapStr(&secondParam,getNextParam());									//
+			cleanParam(secondParam);													//
+			heapStr(&thirdParam,getNextParam());									//
+			cleanParam(thirdParam);														//
+			if (firstParam[0]=='N'||firstParam[0]=='S') {						// If quad is first..
+				quadStr = firstParam;													// Point quadStr at it.
+				degStr = secondParam;													// Deg str will be second.
+				minStr = thirdParam;
+			} else if (fourthParam[0]=='N'||fourthParam[0]=='S') {			// Else quad is last, only other choice we allow.
+				quadStr = thirdParam;													// Quad third param
+				degStr = firstParam;														// deg will be first.
+				minStr = secondParam;													// Min will be second.
+			} else {																			// else?
+				break;																		// Can't find quad, bail!
+			}																					//
+			degAsInt = atoi(degStr);													// Grab degrees as an int.
+			if (degAsInt<=90 && degAsInt>=0) {										// If it passes sanity check.
+				minAsDbl = atof(minStr);												// Grab minutes as a double.
+				if (minAsDbl<=60 && minAsDbl>=0) {									// If minutes passes sanity.
+					ourQuad = north;														// Assume north..
+					if (quadStr[0]=='S') {												// Unless it's an 'S'..
+						ourQuad = south;													// Then, hey, it's south.
+					}																			//
+					ourPos.latDeg	= degAsInt;											// Fill in our bits of the output.
+					ourPos.latMin	= minAsDbl;											//
+					ourPos.latQuad	= ourQuad;											//
+					success = true;														// We have been a success!
+				}																				//
+			}																					//
+		break;																				//
+		case 4	:																			// 
+			heapStr(&firstParam,getNextParam());									// Grab and clean the three params.
 			cleanParam(firstParam);														//
 			heapStr(&secondParam,getNextParam());									//
 			cleanParam(secondParam);													//
@@ -209,48 +242,13 @@ void posParser::parseLat(void) {
 					}																			//
 				}																				//
 			}																					//
-		break;																				//
-		case 4	:																			//
-			heapStr(&firstParam,getNextParam());									// Grab and clean the three params.
-			cleanParam(firstParam);														//
-			heapStr(&secondParam,getNextParam());									//
-			cleanParam(secondParam);													//
-			heapStr(&thirdParam,getNextParam());									//
-			cleanParam(thirdParam);														//
-			heapStr(&thirdParam,getNextParam());									//
-			cleanParam(thirdParam);														//
-			if (firstParam[0]=='N'||firstParam[0]=='S') {						// If quad is first..
-				quadStr = firstParam;													// Point quadStr at it.
-				degStr = secondParam;													// Deg str will be second.
-				minStr = thirdParam;														// Min str will be third.
-			} else if (thirdParam[0]=='N'||thirdParam[0]=='S') {				// Else quad is last, only other choice we allow.
-				quadStr = thirdParam;													// Quad third param
-				degStr = firstParam;														// deg will be first.
-				minStr = secondParam;													// Min will be second.
-			} else {																			// else?
-				break;																		// Can't find quad, bail!
-			}
-			degAsInt = atoi(degStr);												// Grab degrees as an int.
-			if (degAsInt<=90 && degAsInt>=0) {									// If it passes sanity check.
-				minAsDbl = atof(minStr);											// Grab minutes as a double.
-				if (minAsDbl<=60 && minAsDbl>=0) {								// If minutes passes sanity.
-					ourQuad = north;													// Assume north..
-					if (quadStr[0]=='S') {											// Unless it's an 'S'..
-						ourQuad = south;												// Then, hey, it's south.
-					}																		//
-					ourPos.latDeg	= degAsInt;										// Fill in our bits of the output.
-					ourPos.latMin	= minAsDbl;										//
-					ourPos.latQuad	= ourQuad;										//
-					success = true;													// We have been a success!
-				}																			//
-			}																				//
-		break;
-	}
-	freeStr(&firstParam);
-	freeStr(&secondParam);
-	freeStr(&thirdParam);
-	freeStr(&fourthParam);
-	ourPos.latValid = success;
+		break;																				// Time to go.
+	}																							//
+	freeStr(&firstParam);																// Recycle the RAM we used.
+	freeStr(&secondParam);																//
+	freeStr(&thirdParam);																//
+	freeStr(&fourthParam);																//
+	ourPos.latValid = success;															// Note our success.
 }
 
 
@@ -273,12 +271,12 @@ void posParser::parseLon(void) {
 	char*			secStr;
 	bool			success;
 	
-	firstParam	= NULL;
-	secondParam	= NULL;
-	thirdParam	= NULL;
-	fourthParam	= NULL;
-	success = false;
-	switch(numParams()) {
+	firstParam	= NULL;																	// Set anything we'll allocate to NULL.
+	secondParam	= NULL;																	//
+	thirdParam	= NULL;																	//
+	fourthParam	= NULL;																	//
+	success = false;																		// Well, we ain't been a success yet.
+	switch(numParams()) {																// Choose the select by num parameters.
 		case 1	:																			// We got one param. Signed double.
 			heapStr(&firstParam,getNextParam());									// Grab the param.
 			cleanParam(firstParam);														// Clean out gunk..
@@ -292,6 +290,9 @@ void posParser::parseLon(void) {
 				degAsInt = trunc(degAsDbl);											// Save off the degree int.
 				degAsDbl = degAsDbl - degAsInt;										// Sub off the degree int.
 				minAsDbl = degMinMapper.map(degAsDbl);								// Map the remainder to minutes.
+				ourPos.lonDeg	= degAsInt;												// Fill in our bits of the output.
+				ourPos.lonMin	= minAsDbl;												//
+				ourPos.lonQuad	= ourQuad;												//
 				success = true;															// We have been a success!
 			}																					//
 		break;																				//
@@ -318,13 +319,46 @@ void posParser::parseLon(void) {
 				if (quadStr[0]=='E') {													// Unless it's an 'S'..
 					ourQuad = east;														// Then, hey, it's south.
 				}																				//
-				ourPos.latDeg	= degAsInt;												// Fill in our bits of the output.
-				ourPos.latMin	= minAsDbl;												//
-				ourPos.latQuad	= ourQuad;												//
+				ourPos.lonDeg	= degAsInt;												// Fill in our bits of the output.
+				ourPos.lonMin	= minAsDbl;												//
+				ourPos.lonQuad	= ourQuad;												//
 				success = true;															// We have been a success!
 			}
 		break;																				//
 		case 3	:																			// Four prams, int deg, int min, double sec & quad
+			heapStr(&firstParam,getNextParam());									// Grab and clean the three params.
+			cleanParam(firstParam);														//
+			heapStr(&secondParam,getNextParam());									//
+			cleanParam(secondParam);													//
+			heapStr(&thirdParam,getNextParam());									//									//
+			cleanParam(thirdParam);														//
+			if (firstParam[0]=='W'||firstParam[0]=='E') {						// If quad is first..
+				quadStr = firstParam;													// Point quadStr at it.
+				degStr = secondParam;													// Deg str will be second.
+				minStr = thirdParam;														// Min str will be third.
+			} else if (thirdParam[0]=='W'||thirdParam[0]=='E') {				// Else quad is last, only other choice we allow.
+				quadStr = thirdParam;													// Quad third param
+				degStr = firstParam;														// deg will be first.
+				minStr = secondParam;													// Min will be second.
+			} else {																			// else?
+				break;																		// Can't find quad, bail!
+			}
+			degAsInt = atoi(degStr);												// Grab degrees as an int.
+			if (degAsInt<180 && degAsInt>=0) {									// If it passes sanity check.
+				minAsDbl = atof(minStr);											// Grab minutes as a double.
+				if (minAsDbl<60 && minAsDbl>=0) {								// If minutes passes sanity.
+					ourQuad = west;													// Assume west..
+					if (quadStr[0]=='E') {											// Unless it's an 'S'..
+						ourQuad = east;												// Then, hey, it's south.
+					}																		//
+					ourPos.lonDeg	= degAsInt;												// Fill in our bits of the output.
+					ourPos.lonMin	= minAsDbl;												//
+					ourPos.lonQuad	= ourQuad;												//
+					success = true;															// We have been a success!
+				}																			//
+			}																					//
+		break;																				//
+		case 4	:																			//
 			heapStr(&firstParam,getNextParam());									// Grab and clean the four params.
 			cleanParam(firstParam);														//
 			heapStr(&secondParam,getNextParam());									//
@@ -357,55 +391,20 @@ void posParser::parseLon(void) {
 							ourQuad = east;												// Then, hey, it's south.
 						}																		//
 						minAsDbl = minAsInt + secMinMapper.map(secAsDbl);		// Convert our min & sec to double min.
-						ourPos.latDeg	= degAsInt;										// Fill in our bits of the output.
-						ourPos.latMin	= minAsDbl;										//
-						ourPos.latQuad	= ourQuad;										//
+						ourPos.lonDeg	= degAsInt;										// Fill in our bits of the output.
+						ourPos.lonMin	= minAsDbl;										//
+						ourPos.lonQuad	= ourQuad;										//
 						success = true;													// We have been a success!
 					}																			//
 				}																				//
 			}																					//
-		break;																				//
-		case 4	:																			//
-			heapStr(&firstParam,getNextParam());									// Grab and clean the three params.
-			cleanParam(firstParam);														//
-			heapStr(&secondParam,getNextParam());									//
-			cleanParam(secondParam);													//
-			heapStr(&thirdParam,getNextParam());									//
-			cleanParam(thirdParam);														//
-			heapStr(&thirdParam,getNextParam());									//
-			cleanParam(thirdParam);														//
-			if (firstParam[0]=='W'||firstParam[0]=='E') {						// If quad is first..
-				quadStr = firstParam;													// Point quadStr at it.
-				degStr = secondParam;													// Deg str will be second.
-				minStr = thirdParam;														// Min str will be third.
-			} else if (thirdParam[0]=='W'||thirdParam[0]=='E') {				// Else quad is last, only other choice we allow.
-				quadStr = thirdParam;													// Quad third param
-				degStr = firstParam;														// deg will be first.
-				minStr = secondParam;													// Min will be second.
-			} else {																			// else?
-				break;																		// Can't find quad, bail!
-			}
-			degAsInt = atoi(degStr);												// Grab degrees as an int.
-			if (degAsInt<180 && degAsInt>=0) {									// If it passes sanity check.
-				minAsDbl = atof(minStr);											// Grab minutes as a double.
-				if (minAsDbl<=60 && minAsDbl>=0) {								// If minutes passes sanity.
-					ourQuad = west;													// Assume west..
-					if (quadStr[0]=='E') {											// Unless it's an 'S'..
-						ourQuad = east;												// Then, hey, it's south.
-					}																		//
-					ourPos.latDeg	= degAsInt;										// Fill in our bits of the output.
-					ourPos.latMin	= minAsDbl;										//
-					ourPos.latQuad	= ourQuad;										//
-					success = true;													// We have been a success!
-				}																			//
-			}																				//
-		break;
-	}
-	freeStr(&firstParam);
-	freeStr(&secondParam);
-	freeStr(&thirdParam);
-	freeStr(&fourthParam);
-	ourPos.lonValid = success;
+		break;																				// All done.
+	}																							//
+	freeStr(&firstParam);																// Recycle the RAM we used.
+	freeStr(&secondParam);																//
+	freeStr(&thirdParam);																//
+	freeStr(&fourthParam);																//
+	ourPos.lonValid = success;															// Return our success, or not..
 }
 
 
