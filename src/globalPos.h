@@ -44,14 +44,40 @@ struct gPosPack {
 };
 
 
-extern gPosPack nullPos;
-extern bool	checkLatDeg(int degrees);
-extern bool	checkLonDeg(int degrees);
-extern bool	checkMin(double minutes);
-extern double rad2deg(double angleRad);
-extern double deg2rad(double angleDeg);
-//extern double hav(double theta);
+extern gPosPack	nullPos;
+extern bool			checkLatDeg(int degrees);
+extern bool			checkLonDeg(int degrees);
+extern bool			checkMin(double minutes);
+extern double		rad2deg(double angleRad);
+extern double		deg2rad(double angleDeg);
 
+
+
+// **********************************************
+// *****************   navMark  *****************
+// **********************************************
+
+
+// Navigation mark is a named position.
+class navMark {
+
+	public :
+				navMark(const char* inName,gPosPack* inPos);
+				navMark(void);
+	virtual	~navMark(void);
+	
+	virtual	void 				setName(const char* inName);
+	virtual	void 				setPos(gPosPack* inPos);
+				unsigned char* getName(void);
+				gPosPack			getPos(void);
+				uint32_t			numBytes(void);
+				void				fillBuff(uint8_t* buff);
+				void				readBuff(uint8_t* buff);			
+				
+	protected:
+				gPosPack latLon;
+				char*		markName;
+};
 
 
 
@@ -111,6 +137,7 @@ class globalPos {
 				void		setPosValues(const char* latStr,const char* lonStr);
 				void		setQuads(const char*  inLatQuad,const char*  inLonQuad);
 				
+				void		setPos(gPosPack* inPos);
 				void		setPos(double inLat, double inLon);
 				void		setLatValue(int inLatDeg, double inLatMin);
 				void		setLatQuad(quad inLatQuad);
@@ -131,6 +158,7 @@ class globalPos {
 				char*		showLatStr(void);			// Formatted for humans.
 				char*		showLonStr(void);			// This one too.
 				
+				void		getPos(gPosPack* inPos);
 				int		getLatDeg(void);
 				double	getLatMin(void);
 				quad		getLatQuad(void);

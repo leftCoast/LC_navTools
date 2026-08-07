@@ -28,6 +28,75 @@ mapper		degMinMapper(0,1,0,60);
 mapper 		secMinMapper(0,60,0,1);
 posParser	ourPosParser;
 
+
+
+
+// **********************************************
+// *****************   navMark  *****************
+// **********************************************
+
+
+navMark::navMark(void) { markName = NULL; }
+
+
+navMark::navMark(const char* inName,gPosPack* inPos) {
+
+	markName = NULL;
+	setName(inName);
+	setPos(inPos);
+}
+
+
+navMark::~navMark(void) { freeStr(&markName); }
+
+	
+void navMark::setName(const char* inName) { heapStr(&markName,inName); }
+
+
+void navMark::setPos(gPosPack* inPos) { latLon = *inPos; }
+
+
+unsigned char* navMark::getName(void) { return markName; }
+
+
+gPosPack navMark::getPos(void) { return latLon; }
+
+
+uint32_t navMark::numBytes(void) {
+
+	uint32_t	numBytes;
+	
+	numBytes = sizeof(gPosPack);
+	if (markName) {
+		numBytes = numBytes + strlen(markName) + 1;
+	}
+	return numBytes;
+}
+
+		
+void navMark::fillBuff(uint8_t* buff) {
+
+	gPosPack*	packPtr;
+	char*			strPtr;
+	
+	packPtr = (gPosPack*)buff;
+	*packPtr = latLon;
+	strPtr = (char*)&(buff[sizeof(gPosPack)]);
+	strcpy(strPtr,markName);
+}
+
+	
+void navMark::readBuff(uint8_t* buff) {			
+	
+	gPosPack*	packPtr;		
+	char*			strPtr;
+	
+	packPtr = (gPosPack*)buff;
+	setPos(packPtr);
+	strPtr = (char*)&(buff[sizeof(gPosPack)]);
+	setName(strPtr);
+}
+
 	
 // **********************************************
 // ****************   posParser  ****************
@@ -64,6 +133,7 @@ void posParser::parseStr(const char* inStr) {
 // Pass in lat and lon strings and this should return a packed position.
 gPosPack	posParser::parsePos(const char* inLatPos,const char* inLonPos) {
 	
+	
 	ourPos.latValid = false;
 	ourPos.lonValid = false;
 	if (inLatPos && inLonPos) {						// Sanity non NULL..
@@ -78,7 +148,7 @@ gPosPack	posParser::parsePos(const char* inLatPos,const char* inLonPos) {
 			parseLon();
 		}
 	}
-	return nullPos; 
+	return ourPos; 
 }
 
 
@@ -96,6 +166,8 @@ void posParser::cleanParam(char* inParam) {
 			else delChar(inParam,i);
 		}
 	}
+	//Serial.print("Cleaned param : ");
+	//Serial.println(inParam);
 }
 
 
@@ -188,7 +260,7 @@ void posParser::parseLat(void) {
 				break;																		// Can't find quad, bail!
 			}																					//
 			degAsInt = atoi(degStr);													// Grab degrees as an int.
-			if (degAsInt<=90 && degAsInt>=0) {										// If it passes sanity check.
+			if (degAsInt<90 && degAsInt>=0) {										// If it passes sanity check.
 				minAsDbl = atof(minStr);												// Grab minutes as a double.
 				if (minAsDbl<=60 && minAsDbl>=0) {									// If minutes passes sanity.
 					ourQuad = north;														// Assume north..
@@ -311,7 +383,7 @@ void posParser::parseLon(void) {
 				break;																		// There is no else, we give up here.
 			}																					//
 			degAsDbl = atof(degStr);													// We have one float value for degrees
-			if (degAsDbl<180 && degAsDbl>0) {										// If sanity check passes..
+			if (degAsDbl<180 && degAsDbl>=0) {										// If sanity check passes..
 				degAsInt = trunc(degAsDbl);											// Save off the degree int.
 				degAsDbl = degAsDbl - degAsInt;										// Sub off the degree int.
 				minAsDbl = degMinMapper.map(degAsDbl);								// Map the remainder to minutes.
@@ -633,8 +705,6 @@ void globalPos::setLon(double inLon) {
 				
 void globalPos::setPosValues(const char* latStr,const char* lonStr) {
 
-	//setLatValue(latStr);
-	//setLonValue(lonStr);
 	gPosPack	aPos;
 	
 	aPos = ourPosParser.parsePos(latStr,lonStr);
@@ -651,6 +721,17 @@ void globalPos::setQuads(const char*  inLatQuad,const char*  inLonQuad) {
 }
 
 
+void globalPos::setPos(gPosPack* inPos) {
+
+	latDeg	= inPos->latDeg;
+	latMin	= inPos->latMin;
+	latQuad	= inPos->latQuad;
+	lonDeg	= inPos->lonDeg;
+	lonMin	= inPos->lonMin;
+	lonQuad	=  inPos->lonQuad;
+}
+	
+	
 void globalPos::setPos(double inLat, double inLon) {
 
 	int		latDeg;
@@ -943,6 +1024,19 @@ char* globalPos::showLonStr(void) {
 	}
 	return outStr;
 }			
+
+
+void globalPos::getPos(gPosPack* inPos) {
+
+	if (inPos) {
+		inPos->latDeg	= latDeg;
+		inPos->latMin	= latMin;
+		inPos->latQuad	= latQuad;
+		inPos->lonDeg	= lonDeg;
+		inPos->lonMin	= lonMin;
+		inPos->lonQuad	= lonQuad;
+	}	
+}
 
 				
 int globalPos::getLatDeg(void)	{ return latDeg; }
