@@ -24,10 +24,24 @@ double deg2rad(double angleDeg) { return angleDeg*M_PI/180.0; }
 
 double hav(double theta) { return ((1-cos(theta))/2.0); }		// Haversine function
 
+
+void showGPosPack(gPosPack* aGPP) {
+
+	Serial.print(" latValid : ");Serial.println(aGPP->latValid);
+	Serial.print(" latDeg   : ");Serial.println(aGPP->latDeg);
+	Serial.print(" latMin   : ");Serial.println(aGPP->latMin,8);
+	Serial.print(" latQuad  : ");Serial.println(aGPP->latQuad);
+	Serial.print(" lonValid : ");Serial.println(aGPP->lonValid);
+	Serial.print(" lonDeg   : ");Serial.println(aGPP->lonDeg);
+	Serial.print(" lonMin   : ");Serial.println(aGPP->lonMin,8);
+	Serial.print(" lonQuad  : ");Serial.println(aGPP->lonQuad);
+}
+
+
+
 mapper		degMinMapper(0,1,0,60);
 mapper 		secMinMapper(0,60,0,1);
 posParser	ourPosParser;
-
 
 
 
@@ -988,15 +1002,16 @@ char* globalPos::showLatStr(void) {
 	char	tempStr[G_POS_BUFF_BYTES];
 	
 	if (valid()) {
+		
+		sprintf(tempStr,"%3u%s",latDeg," ");
+		strcpy(outStr,tempStr);
+		sprintf(tempStr,"%7.5f%s",latMin," ");
+		strcat(outStr,tempStr);
 		switch(latQuad) {
-			case north	: strcpy(outStr, "North ");	break;
-			case south	: strcpy(outStr, "South ");	break;
-			default		:										break;
+			case north	: strcat(outStr, "N ");	break;
+			case south	: strcat(outStr, "S ");	break;
+			default		:								break;
 		}
-		sprintf(tempStr,"%3u%s",latDeg," Deg. ");
-		strcat(outStr,tempStr);
-		sprintf(tempStr,"%6.3lf%s",latMin," Min.");
-		strcat(outStr,tempStr);
 	} else {
 		strcpy(outStr,"Invalid fix");
 	}
@@ -1010,15 +1025,15 @@ char* globalPos::showLonStr(void) {
 	char	tempStr[G_POS_BUFF_BYTES];
 	
 	if (valid()) {
+		sprintf(tempStr,"%3u%s",lonDeg," ");
+		strcpy(outStr,tempStr);
+		sprintf(tempStr,"%7.5f%s",lonMin," ");
+		strcat(outStr,tempStr);
 		switch(lonQuad) {
-			case east	: strcpy(outStr, "East  ");	break;
-			case west	: strcpy(outStr, "West  ");	break;
-			default		:										break;
+			case east	: strcat(outStr, "E");	break;
+			case west	: strcat(outStr, "W");	break;
+			default		:								break;
 		}
-		sprintf(tempStr,"%3u%s",lonDeg," Deg. ");
-		strcat(outStr,tempStr);
-		sprintf(tempStr,"%6.3lf%s",lonMin," Min.");
-		strcat(outStr,tempStr);
 	} else {
 		strcpy(outStr,"Invalid fix");
 	}

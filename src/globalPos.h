@@ -45,11 +45,13 @@ struct gPosPack {
 
 
 extern gPosPack	nullPos;
+extern void			showGPosPack(gPosPack* aGPP);
 extern bool			checkLatDeg(int degrees);
 extern bool			checkLonDeg(int degrees);
 extern bool			checkMin(double minutes);
 extern double		rad2deg(double angleRad);
 extern double		deg2rad(double angleDeg);
+
 
 
 
@@ -74,7 +76,7 @@ class navMark {
 				void				fillBuff(uint8_t* buff);
 				void				readBuff(uint8_t* buff);			
 				
-	protected:
+	//protected:
 				gPosPack latLon;
 				char*		markName;
 };
