@@ -70,7 +70,7 @@ void navMark::setName(const char* inName) { heapStr(&markName,inName); }
 void navMark::setPos(gPosPack* inPos) { latLon = *inPos; }
 
 
-unsigned char* navMark::getName(void) { return markName; }
+const char* navMark::getName(void) { return markName; }
 
 
 gPosPack navMark::getPos(void) { return latLon; }

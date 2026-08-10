@@ -70,7 +70,7 @@ class navMark {
 	
 	virtual	void 				setName(const char* inName);
 	virtual	void 				setPos(gPosPack* inPos);
-				unsigned char* getName(void);
+				const char* 	getName(void);
 				gPosPack			getPos(void);
 				uint32_t			numBytes(void);
 				void				fillBuff(uint8_t* buff);
