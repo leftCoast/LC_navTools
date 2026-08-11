@@ -39,10 +39,10 @@ void showGPosPack(gPosPack* aGPP) {
 
 
 
-mapper		degMinMapper(0,1,0,60);
-mapper 		secMinMapper(0,60,0,1);
-posParser	ourPosParser;
-
+mapper			degMinMapper(0,1,0,60);
+mapper 			secMinMapper(0,60,0,1);
+posParser		ourPosParser;
+posFormatter	ourPosFormatter;
 
 
 // **********************************************
@@ -63,7 +63,7 @@ navMark::navMark(const char* inName,gPosPack* inPos) {
 
 navMark::~navMark(void) { freeStr(&markName); }
 
-	
+
 void navMark::setName(const char* inName) { heapStr(&markName,inName); }
 
 
@@ -494,21 +494,159 @@ void posParser::parseLon(void) {
 }
 
 
+// **********************************************
+// *************** posFormatter *****************
+// **********************************************
 
+
+posFormatter::posFormatter(void) {  }
+
+
+posFormatter::~posFormatter(void) {  }
+
+	
+char* posFormatter::getLatStr(gPosPack* aPos,posFormat format) {
+
+	double	degrees;
+	int		minutes;
+	double	seconds;
+	int		iSeconds;
+	char		quadStr[4];
+	
+	strcpy(outStr,"Invalid");
+	if (aPos) {
+		if (aPos->latValid) {
+			if (aPos->latQuad==south) {
+				strcpy(quadStr,"S");
+			} else {
+				strcpy(quadStr,"N");
+			}
+			switch(format) {
+				case floatDeg							:
+					degrees = aPos->latDeg + (aPos->latMin / 60.0);
+					if (aPos->latQuad==south) {
+						degrees = -degrees;
+					}
+					sprintf(outStr,"%11.6f",degrees);
+				break;
+				case floatDeg_quad					:
+					degrees = aPos->latDeg + (aPos->latMin / 60.0);
+					sprintf(outStr,"%10.6f%s%s",degrees," ",quadStr);
+				break;
+				case intDeg_floatMin_quad			:
+					sprintf(outStr,"%3u%s%8.5f%s%s",aPos->latDeg," ",aPos->latMin," ",quadStr);
+				break;
+				case intDeg_intMin_intSec_quad	:
+					minutes = trunc(aPos->latMin);
+					iSeconds = round((aPos->latMin - minutes) * 60.0);
+					sprintf(outStr,"%3u%s%2u%s%2u%s%s",aPos->latDeg," ",minutes," ",iSeconds," ",quadStr);
+				break;
+				case intDeg_intMin_floatSec_quad	:
+					minutes = trunc(aPos->latMin);
+					seconds = (aPos->latMin - minutes) * 60.0;
+					sprintf(outStr,"%3u%s%2u%s%6.3f%s%s",aPos->latDeg," ",minutes," ",seconds," ",quadStr);
+				break;
+				case quad_floatDeg					:
+					degrees = aPos->latDeg + (aPos->latMin / 60.0);
+					sprintf(outStr,"%s%s%10.6f",quadStr," ",degrees);
+				break;
+				case quad_intDeg_floatMin			:
+					sprintf(outStr,"%s%s%3u%s%10.6f",quadStr," ",aPos->latDeg," ",aPos->latMin);
+				break;
+				case quad_intDeg_intMin_intSec	:
+					minutes = trunc(aPos->latMin);
+					iSeconds = round((aPos->latMin - minutes) * 60.0);
+					sprintf(outStr,"%s%s%3u%s%2u%s%2u",quadStr," ",aPos->latDeg," ",minutes," ",iSeconds);
+				break;
+				case quad_intDeg_intMin_floatSec	:
+					minutes = trunc(aPos->latMin);
+					seconds = (aPos->latMin - minutes) * 60.0;
+					sprintf(outStr,"%s%s%3u%s%2u%s%6.3f",quadStr," ",aPos->latDeg," ",minutes," ",seconds);
+				break;
+			}
+		}
+	}
+	return outStr;
+}
+
+
+char* posFormatter::getLonStr(gPosPack* aPos,posFormat format) {
+
+	double	degrees;
+	int		minutes;
+	double	seconds;
+	int		iSeconds;
+	char		quadStr[4];
+	
+	strcpy(outStr,"Invalid");
+	if (aPos) {
+		if (aPos->lonValid) {
+			if (aPos->lonQuad==east) {
+				strcpy(quadStr,"E");
+			} else {
+				strcpy(quadStr,"W");
+			}
+			switch(format) {
+				case floatDeg							:
+					degrees = aPos->lonDeg + (aPos->lonMin / 60.0);
+					if (aPos->lonQuad==west) {
+						degrees = -degrees;
+					}
+					sprintf(outStr,"%11.6f",degrees);
+				break;
+				case floatDeg_quad					:
+					degrees = aPos->lonDeg + (aPos->lonMin / 60.0);
+					sprintf(outStr,"%10.6f%s%s",degrees," ",quadStr);
+				break;
+				case intDeg_floatMin_quad			:
+					sprintf(outStr,"%3u%s%8.5f%s%s",aPos->lonDeg," ",aPos->lonMin," ",quadStr);
+				break;
+				case intDeg_intMin_intSec_quad	:
+					minutes = trunc(aPos->lonMin);
+					iSeconds = round((aPos->lonMin - minutes) * 60.0);
+					sprintf(outStr,"%3u%s%2u%s%2u%s%s",aPos->lonDeg," ",minutes," ",iSeconds," ",quadStr);
+				break;
+				case intDeg_intMin_floatSec_quad	:
+					minutes = trunc(aPos->lonMin);
+					seconds = (aPos->lonMin - minutes) * 60.0;
+					sprintf(outStr,"%3u%s%2u%s%6.3f%s%s",aPos->lonDeg," ",minutes," ",seconds," ",quadStr);
+				break;
+				case quad_floatDeg					:
+					degrees = aPos->lonDeg + (aPos->lonMin / 60.0);
+					sprintf(outStr,"%s%s%10.6f",quadStr," ",degrees);
+				break;
+				case quad_intDeg_floatMin			:
+					sprintf(outStr,"%s%s%3u%s%10.6f",quadStr," ",aPos->lonDeg," ",aPos->lonMin);
+				break;
+				case quad_intDeg_intMin_intSec	:
+					minutes = trunc(aPos->lonMin);
+					iSeconds = round((aPos->lonMin - minutes) * 60.0);
+					sprintf(outStr,"%s%s%3u%s%2u%s%2u",quadStr," ",aPos->lonDeg," ",minutes," ",iSeconds);
+				break;
+				case quad_intDeg_intMin_floatSec	:
+					minutes = trunc(aPos->lonMin);
+					seconds = (aPos->lonMin - minutes) * 60.0;
+					sprintf(outStr,"%s%s%3u%s%2u%s%6.3f",quadStr," ",aPos->lonDeg," ",minutes," ",seconds);
+				break;
+			}
+		}
+	}
+	return outStr;
+}
+
+	
+	
+	
 // **********************************************
 // ****************  globalPos  *****************
 // **********************************************
 
 
-// Constructor, fill in some legal default values.
+// Constructor, we ain't valid yet.
 globalPos::globalPos(void) {
 
-	latDeg	= 48;
-	latMin	= 29.41;
-	latQuad	= north;
-	lonDeg	= 122;
-	lonMin	= 39.72;
-	lonQuad	= west;
+	ourPos.latValid = false;
+	ourPos.lonValid = false;
 }
 
 
@@ -517,17 +655,10 @@ globalPos::~globalPos(void) {  }
 
 
 // Make sure everything is in spec.x	
-bool globalPos::valid(void) {
+bool globalPos::valid(void) { return ourPos.latValid && ourPos.lonValid; }
 
-	if (!checkLatDeg(latDeg))	return false;
-	if (!checkMin(latMin))		return false;
-	if (!checkLonDeg(lonDeg))	return false;
-	if (!checkMin(lonMin))		return false;
-	if (latQuad==east||latQuad==west) return false;
-	if (lonQuad==north||lonQuad==south) return false;
-	return true;
-}
-	
+
+/*	
 int globalPos::writeToEEPROM(int addr) {
 
 	
@@ -553,40 +684,103 @@ int globalPos::copyFromEEPROM(int addr) {
 	setLon(value);
 	return 2*sizeof(double);
 }
-
+*/
 								
 // I wanna' be like you euooo.
 void globalPos::copyPos(globalPos* aLatLon) {
 
 	if (aLatLon) {
-		copyLat(aLatLon);
-		copyLon(aLatLon);
+		ourPos = aLatLon->getPos();
+		//copyLat(aLatLon);
+		//copyLon(aLatLon);
 	}
 }
 
 
-// I wanna' be like.. Half of you euooo.
-void globalPos::copyLat(globalPos* aLatLon) {
+void globalPos::setPos(gPosPack* inPos) { ourPos = *inPos; }
 
-	if (aLatLon) {
-		latDeg	= aLatLon->latDeg;
-		latMin	= aLatLon->latMin;
-		latQuad	= aLatLon->latQuad;
+	
+void globalPos::setLat(gPosPack* aPos) {
+
+	ourPos.latValid	= false;
+	if (aPos) {
+		ourPos.latValid	= aPos->latValid;
+		ourPos.latDeg		= aPos->latDeg;
+		ourPos.latMin		= aPos->latMin;
+		ourPos.latQuad		= aPos->latQuad;
 	}
 }
 
 
-// Or the other half of you euooo.
-void globalPos::copyLon(globalPos* aLatLon) {
+void globalPos::setLon(gPosPack* aPos) {
 
-	if (aLatLon) {
-		lonDeg	= aLatLon->lonDeg;
-		lonMin	= aLatLon->lonMin;
-		lonQuad	= aLatLon->lonQuad;
+	ourPos.lonValid	= false;
+	if (aPos) {
+		ourPos.lonValid	= aPos->lonValid;
+		ourPos.lonDeg		= aPos->lonDeg;
+		ourPos.lonMin		= aPos->lonMin;
+		ourPos.lonQuad		= aPos->lonQuad;
 	}
 }
 
-				
+	
+void globalPos::setPos(double inLat, double inLon) {
+	
+	ourPos.latValid = false;
+	ourPos.lonValid = false;
+	if ((inLat<=90 && inLat>=-90)&&
+		(inLon>=-180 && inLon<=180)) {
+		ourPos.latDeg = trunc(inLat);
+		ourPos.latDeg = abs(ourPos.latDeg);
+		ourPos.latMin = abs(inLat) - ourPos.latDeg;
+		ourPos.latMin = ourPos.latMin * 60.0;
+		if (inLat>=0) {
+			ourPos.latQuad = north;
+		} else {
+			ourPos.latQuad = south;
+		}
+		ourPos.lonDeg = trunc(inLon);
+		ourPos.lonDeg = abs(ourPos.lonDeg);
+		ourPos.lonMin = abs(inLon) - ourPos.lonDeg;
+		ourPos.lonMin = ourPos.lonMin * 60.0;
+		if (inLon>=0) {
+			ourPos.lonQuad = east;
+		} else {
+			ourPos.lonQuad = west;
+		}
+		ourPos.latValid = true;
+		ourPos.lonValid = true;
+	}
+}
+
+
+void globalPos::setPosition(int inLatDeg, double inLatMin, quad inLatQuad, int inLonDeg, double inLonMin, quad inLonQuad) {
+
+	ourPos.latValid = false;
+	ourPos.lonValid = false;
+	if (checkLatDeg(inLatDeg)) {
+		if (checkLonDeg(inLonDeg)) {
+			if (checkMin(inLatMin)) {
+				if (checkMin(inLonMin)) {
+					if (inLatQuad==north||inLatQuad==south) {
+						if (inLonQuad==east||inLonQuad==west) {
+							ourPos.latDeg	= inLatDeg;
+							ourPos.latMin	= inLatMin;
+							ourPos.latQuad	= inLatQuad;
+							ourPos.lonDeg	= inLonDeg;
+							ourPos.lonMin	= inLonMin;
+							ourPos.lonQuad	= inLonQuad;
+							ourPos.latValid = true;
+							ourPos.lonValid = true;
+						}
+					}
+				}
+			}
+		}
+	}
+}
+
+
 // In the format DD MM.MMM	Does not look for Quadrent. See below.
 void globalPos::setLatValue(const char* inLatStr) {
 
@@ -604,12 +798,13 @@ void globalPos::setLatValue(const char* inLatStr) {
 			if (dotIndex>2) {													// If we can back up a couple.                                                                                                                                                                                                                                                                                                     
 				strcpy(minStr,&(latStr[dotIndex-2]));					// From here to end is the minutes.
 				latStr[dotIndex-2] = '\0';									// Break the string where we started.
-				latDeg = atoi(latStr);										// From start to new end is degrees.
-				latMin = atof(minStr);										// minute string is already saved.
+				ourPos.latDeg = atoi(latStr);								// From start to new end is degrees.
+				ourPos.latMin = atof(minStr);								// minute string is already saved.
 			}																		//
 		}																			//
 		freeStr(&latStr);														// Recycle the local string.
-	}
+	}																				//
+	setValid();																	// Check to see if our position is valid.
 }
 
 
@@ -622,14 +817,15 @@ void globalPos::setLatQuad(const char* inQuad) {
 	if (heapStr(&quadStr,inQuad)) {											// If we can alocate a copy.
 		upCase(quadStr);															// Make it all uppercase.
 		if (!strcmp("N",quadStr)||!strcmp("NORTH",quadStr)) {			// We'll take either of these.
-			latQuad = north;														// Call it north.
+			ourPos.latQuad = north;												// Call it north.
 		}else if (!strcmp("S",quadStr)||!strcmp("SOUTH",quadStr)) {	// Else we'll take either of these.
-			latQuad = south;														// Calling them south.
+			ourPos.latQuad = south;												// Calling them south.
 		}																				//
 		freeStr(&quadStr);														// Recycle the local string.
 	}																					//
+	setValid();																		// Check to see if our position is valid.
 }
-	 
+
 
 // In the format DDD MM.MMM	Does not look for Quadrent. See below.		 
 void globalPos::setLonValue(const char* inLonStr) {
@@ -648,12 +844,13 @@ void globalPos::setLonValue(const char* inLonStr) {
 			if (dotIndex>2) {													// If we can back up a couple.                                                                                                                                                                                                                                                                                                     
 				strcpy(minStr,&(lonStr[dotIndex-2]));					// From here to end is the minutes.
 				lonStr[dotIndex-2] = '\0';									// Break the string where we started.
-				lonDeg = atoi(lonStr);										// From start to new end is degrees.
-				lonMin = atof(minStr);										// minute string is already saved.
+				ourPos.lonDeg = atoi(lonStr);								// From start to new end is degrees.
+				ourPos.lonMin = atof(minStr);								// minute string is already saved.
 			}																		//
 		}																			//
 		freeStr(&lonStr);														// Recycle the local string.
-	}
+	}																				//
+	setValid();																	// Check to see if our position is valid.
 }
 
 
@@ -662,170 +859,45 @@ void globalPos::setLonQuad(const char* inQuad) {
 
 	char*		quadStr;
 	
-	quadStr = NULL;															// ALWAYS initialize at NULL for this.
-	if (heapStr(&quadStr,inQuad)) {										// If we can alocate a copy.
-		upCase(quadStr);														// Make it all uppercase.
-		if (!strcmp("E",quadStr)||!strcmp("EAST",quadStr)) {		// We'll take either of these.
-			lonQuad = east;													// Call it north.
+	quadStr = NULL;																// ALWAYS initialize at NULL for this.
+	if (heapStr(&quadStr,inQuad)) {											// If we can alocate a copy.
+		upCase(quadStr);															// Make it all uppercase.
+		if (!strcmp("E",quadStr)||!strcmp("EAST",quadStr)) {			// We'll take either of these.
+			ourPos.lonQuad = east;												// Call it north.
 		} else if (!strcmp("W",quadStr)||!strcmp("WEST",quadStr)) {	// Else we'll take either of these.
-			lonQuad = west;													// Calling them south.
-		}																			//
-		freeStr(&quadStr);													// Recycle the local string.
-	}																				//
+			ourPos.lonQuad = west;												// Calling them south.
+		}																				//
+		freeStr(&quadStr);														// Recycle the local string.
+	}																					//
+	setValid();																		// Check to see if our position is valid.
 }
 
 
-void globalPos::setLat(double inLat) {
-	
-	int		latDeg;
-	double	latMin;
-	quad		latQuad;
-	
-	latDeg = trunc(inLat);
-	latDeg = abs(latDeg);
-	latMin = abs(inLat) - latDeg;
-	latMin = latMin * 60.0;
-	if (inLat>=0) {
-		latQuad = north;
-	} else {
-		latQuad = south;
+// From the values we have saved, are we holding a valid position? Good for when you shove
+// in a value from, wherever, and need know if it was valid or not. For example the GPS
+// reader code stuffs in position values from the hardware. Then as the last value  comes
+// in, it calls this to set the valid flags. For whomever wants to use this data.
+void globalPos::setValid(void) {
+
+	ourPos.latValid = false;
+	ourPos.lonValid = false;
+	if (ourPos.latDeg<=90 && ourPos.latDeg>=0) {
+		if (ourPos.latMin<60 && ourPos.latMin>=0) {
+			if (ourPos.latQuad==north || ourPos.latQuad==south) {
+				ourPos.latValid = true;
+			}
+		}
 	}
-	setLatValue(latDeg,latMin);
-	setLatQuad(latQuad);
-}
-
-
-void globalPos::setLon(double inLon) {
-
-	
-	int		lonDeg;
-	double	lonMin;
-	quad		lonQuad;
-	
-	lonDeg = trunc(inLon);
-	lonDeg = abs(lonDeg);
-	lonMin = abs(inLon) - lonDeg;
-	lonMin = lonMin * 60.0;
-	if (inLon>=0) {
-		lonQuad = east;
-	} else {
-		lonQuad = west;
+	if (ourPos.lonDeg<=180 && ourPos.lonDeg>=0) {
+		if (ourPos.lonMin<60 && ourPos.lonMin>=0) {
+			if (ourPos.latQuad==east || ourPos.latQuad==west) {
+				ourPos.lonValid = true;
+			}
+		}
 	}
-	setLonValue(lonDeg,lonMin);
-	setLonQuad(lonQuad);
+} 
 	
-}
 				
-				
-void globalPos::setPosValues(const char* latStr,const char* lonStr) {
-
-	gPosPack	aPos;
-	
-	aPos = ourPosParser.parsePos(latStr,lonStr);
-	if (aPos.latValid && aPos.lonValid) {
-		setPosition(aPos.latDeg,aPos.latMin,aPos.latQuad,aPos.lonDeg,aPos.lonMin,aPos.lonQuad);
-	}
-}
-
-
-void globalPos::setQuads(const char*  inLatQuad,const char*  inLonQuad) {
-
-	setLatQuad(inLatQuad);
-	setLonQuad(inLonQuad);
-}
-
-
-void globalPos::setPos(gPosPack* inPos) {
-
-	latDeg	= inPos->latDeg;
-	latMin	= inPos->latMin;
-	latQuad	= inPos->latQuad;
-	lonDeg	= inPos->lonDeg;
-	lonMin	= inPos->lonMin;
-	lonQuad	=  inPos->lonQuad;
-}
-	
-	
-void globalPos::setPos(double inLat, double inLon) {
-
-	int		latDeg;
-	double	latMin;
-	quad		latQuad;
-	int		lonDeg;
-	double	lonMin;
-	quad		lonQuad;
-	
-	latDeg = trunc(inLat);
-	latDeg = abs(latDeg);
-	latMin = abs(inLat) - latDeg;
-	latMin = latMin * 60.0;
-	if (inLat>=0) {
-		latQuad = north;
-	} else {
-		latQuad = south;
-	}
-	lonDeg = trunc(inLon);
-	lonDeg = abs(lonDeg);
-	lonMin = abs(inLon) - lonDeg;
-	lonMin = lonMin * 60.0;
-	if (inLon>=0) {
-		lonQuad = east;
-	} else {
-		lonQuad = west;
-	}
-	setPosition(latDeg,latMin,latQuad,lonDeg,lonMin,lonQuad);
-}
-
-
-void globalPos::setLatValue(int inLatDeg, double inLatMin) {
-
-	if (checkLatDeg(inLatDeg)&&checkMin(inLatMin)) {
-		latDeg = inLatDeg;
-		latMin = inLatMin;
-	}
-}
-
-
-void globalPos::setLatQuad(quad inLatQuad) {
-
-	if (inLatQuad==north||inLatQuad==south) {
-		latQuad = inLatQuad;
-	}
-}
-
-
-void globalPos::setLonValue(int inLonDeg, double inLonMin) {
-
-	if (checkLonDeg(inLonDeg)&&checkMin(inLonMin)) {
-		lonDeg = inLonDeg;
-		lonMin = inLonMin;
-	}
-}
-
-
-void globalPos::setLonQuad(quad inLonQuad) {
-
-	if (inLonQuad==east||inLonQuad==west) {
-		lonQuad = inLonQuad;
-	}
-}
-
-
-void globalPos::setQuads(quad inLatQuad,quad inLonQuad) {
-
-	setLatQuad(inLatQuad);
-	setLonQuad(inLonQuad);
-}
-
-
-void globalPos::setPosition(int inLatDeg, double inLatMin, quad inLatQuad, int inLonDeg, double inLonMin, quad inLonQuad) {
-
-	setLatValue(inLatDeg,inLatMin);
-	setLonValue(inLonDeg,inLonMin);
-	setQuads(inLatQuad,inLonQuad);
-}
-
-
 // We are at point A, we want to sail to point B. Where should we head? Well, the internet
 // furnished this formula :
 //
@@ -927,174 +999,47 @@ double globalPos::distanceTo(globalPos* inDest) {
 }
 
 
-// These value to string methods end up with all this monkey motion because typical
-// Arduinos don't do float to string conversions in the normal sprintf() ways. So I
-// convert everything to ints and paste the string bits all together "by hand".
-
-// This assumes the values are "good" IE in range. Otherwise you'll get wacky answers.
-char* globalPos::getLatStr(void) {
-
-	char		tempStr[G_POS_BUFF_BYTES];
-	int		lMin;
-	double	lMinDec;
-	int		lMinOut;
-	
-	sprintf(tempStr,"%03u",latDeg);
-	strcpy(outStr,tempStr);
-	lMin = trunc(latMin);
-	sprintf(tempStr,"%02u",lMin);
-	strcat(outStr,tempStr);
-	strcat(outStr,".");
-	lMinDec = latMin - lMin;
-	lMinOut = round(lMinDec * 10000);
-	sprintf(tempStr,"%04u",lMinOut);
-	strcat(outStr,tempStr);
-	return outStr;
-}
-
-	
-char* globalPos::getLatQuadStr(void) {
-
-	if (latQuad==north) {
-		strcpy(outStr,"N");
-	} else {
-		strcpy(outStr,"S");
-	}
-	return outStr;
-}
+// Formatted for humans.
+char* globalPos::getLatStr(posFormat format) { return ourPosFormatter.getLatStr(&ourPos,format); }
 
 
-char* globalPos::getLonStr(void) {
-
-	char	tempStr[G_POS_BUFF_BYTES];
-	int	lMin;
-	double	lMinDec;
-	int	lMinOut;
-	
-	sprintf(tempStr,"%03u",lonDeg);
-	strcpy(outStr,tempStr);
-	lMin = trunc(lonMin);
-	sprintf(tempStr,"%02u",lMin);
-	strcat(outStr,tempStr);
-	strcat(outStr,".");
-	lMinDec = lonMin - lMin;
-	lMinOut = round(lMinDec * 10000);
-	sprintf(tempStr,"%04u",lMinOut);
-	strcat(outStr,tempStr);
-	return outStr;
-}
+// Formatted for humans as well.
+char* globalPos::getLonStr(posFormat format) { return ourPosFormatter.getLonStr(&ourPos,format); }
 
 
-char* globalPos::getLonQuadStr(void) {
-	
-	if (lonQuad==east) {
-		strcpy(outStr,"E");
-	} else {
-		strcpy(outStr,"W");
-	}
-	return outStr;
-}
+// Want our position? Have a copy!
+gPosPack globalPos::getPos(void) { return ourPos; }
 
 
-// Formatted for humans.	
-char* globalPos::showLatStr(void) {
-
-	char	tempStr[G_POS_BUFF_BYTES];
-	
-	if (valid()) {
-		
-		sprintf(tempStr,"%3u%s",latDeg," ");
-		strcpy(outStr,tempStr);
-		sprintf(tempStr,"%7.5f%s",latMin," ");
-		strcat(outStr,tempStr);
-		switch(latQuad) {
-			case north	: strcat(outStr, "N ");	break;
-			case south	: strcat(outStr, "S ");	break;
-			default		:								break;
-		}
-	} else {
-		strcpy(outStr,"Invalid fix");
-	}
-	return outStr;
-}
-
-
-// This one too.			
-char* globalPos::showLonStr(void) {
-
-	char	tempStr[G_POS_BUFF_BYTES];
-	
-	if (valid()) {
-		sprintf(tempStr,"%3u%s",lonDeg," ");
-		strcpy(outStr,tempStr);
-		sprintf(tempStr,"%7.5f%s",lonMin," ");
-		strcat(outStr,tempStr);
-		switch(lonQuad) {
-			case east	: strcat(outStr, "E");	break;
-			case west	: strcat(outStr, "W");	break;
-			default		:								break;
-		}
-	} else {
-		strcpy(outStr,"Invalid fix");
-	}
-	return outStr;
-}			
-
-
-void globalPos::getPos(gPosPack* inPos) {
-
-	if (inPos) {
-		inPos->latDeg	= latDeg;
-		inPos->latMin	= latMin;
-		inPos->latQuad	= latQuad;
-		inPos->lonDeg	= lonDeg;
-		inPos->lonMin	= lonMin;
-		inPos->lonQuad	= lonQuad;
-	}	
-}
-
-				
-int globalPos::getLatDeg(void)	{ return latDeg; }
-
-double globalPos::getLatMin(void)	{ return latMin; }
-
-quad globalPos::getLatQuad(void)	{ return latQuad; }
-
-int globalPos::getLonDeg(void)	{ return lonDeg; }
-
-double globalPos::getLonMin(void)	{ return lonMin; }
-
-quad globalPos::getLonQuad(void)	{ return lonQuad; }
-
-
+// For NMEA2k messages.	And MATH!
 double globalPos::getLatAsDbl(void) {
 	
 	double	result;
 	
-	result = latMin/60.0;
-	result = result + latDeg;
-	if (latQuad==south) {
+	result = ourPos.latMin/60.0;
+	result = result + ourPos.latDeg;
+	if (ourPos.latQuad==south) {
 		result = result * -1;
 	}
 	return result;
 }
 
 
+// For NMEA2k messages.	And MATH!
 double globalPos::getLonAsDbl(void) {
 
 	double	result;
 	
-	result = lonMin/60.0;
-	result = result + lonDeg;
-	if (lonQuad==west) {
+	result = ourPos.lonMin/60.0;
+	result = result + ourPos.lonDeg;
+	if (ourPos.lonQuad==west) {
 		result = result * -1;
 	}
 	return result;
 }
 
 
-
-// For NMEA2k messages.				
+// For NMEA2k messages.			
 int32_t  globalPos::getLatAsInt32(void) {	
 
 	double	temp;
@@ -1144,3 +1089,4 @@ int64_t	globalPos::getLonAsInt64(void) {
 	result = round(temp);
 	return result;
 }
+

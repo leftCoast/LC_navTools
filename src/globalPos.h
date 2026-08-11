@@ -76,7 +76,7 @@ class navMark {
 				void				fillBuff(uint8_t* buff);
 				void				readBuff(uint8_t* buff);			
 				
-	//protected:
+	protected:
 				gPosPack latLon;
 				char*		markName;
 };
@@ -99,6 +99,8 @@ class posParser :	public lilParser {
 	virtual	~posParser(void);
 
 				gPosPack	parsePos(const char* inLatPos,const char* inLonPos);
+	
+	protected:
 				void		parseStr(const char* inStr);
 				void		cleanParam(char* inParam);
 				void		parseLat(void);
@@ -106,7 +108,30 @@ class posParser :	public lilParser {
 				
 				gPosPack	ourPos;
 };
+
+extern posParser ourPosParser;
+
+
 	
+// **********************************************
+// *************** posFormatter *****************
+// **********************************************
+
+
+class posFormatter :	public lilParser {
+
+	public:
+				posFormatter(void);
+	virtual	~posFormatter(void);
+	
+				char*	getLatStr(gPosPack* aPos,posFormat format);
+				char*	getLonStr(gPosPack* aPos,posFormat format);
+				
+				char	outStr[G_POS_BUFF_BYTES];
+	};
+	
+extern posFormatter ourPosFormatter;	
+
 
 
 // **********************************************
@@ -121,52 +146,36 @@ class globalPos {
 	
 				bool		valid(void);
 				
-				int		writeToEEPROM(int addr);
-				int		copyFromEEPROM(int addr);
+				//int		writeToEEPROM(int addr);
+				//int		copyFromEEPROM(int addr);
 				
 				void		copyPos(globalPos* aLatLon);
-				void		copyLat(globalPos* aLatLon);
-				void		copyLon(globalPos* aLatLon);
-				
-				void		setLatValue(const char* inLatStr);
-				void		setLatQuad(const char* inQuad);
-				void		setLonValue(const char* inLonStr);
-				void		setLonQuad(const char* inQuad);
-				
-				void		setLat(double inLat);
-				void		setLon(double inLon);
-				
-				void		setPosValues(const char* latStr,const char* lonStr);
-				void		setQuads(const char*  inLatQuad,const char*  inLonQuad);
 				
 				void		setPos(gPosPack* inPos);
+				void		setLat(gPosPack* aPos);
+				void		setLon(gPosPack* aPos);
 				void		setPos(double inLat, double inLon);
-				void		setLatValue(int inLatDeg, double inLatMin);
-				void		setLatQuad(quad inLatQuad);
-				void		setLonValue(int inLonDeg, double inLonMin);
-				void		setLonQuad(quad inLonQuad);
-				void		setQuads(quad inLatQuad,quad inLonQuad);
-				
 				void		setPosition(int inLatDeg, double inLatMin, quad inLatQuad, int inLonDeg, double inLonMin, quad inLonQuad);
 				
-				double	trueBearingTo(globalPos* inDest);
+				void		setLatValue(const char* inParam);	// This set is for the GPS reader.
+				void		setLatQuad(const char* inParam);
+				void		setLonValue(const char* inParam);
+				void		setLonQuad(const char* inParam);
+				void		setValid(void);
+				
+				double	trueBearingTo(globalPos* inDest);	// Calculating the good stuff.
 				double	distanceTo(globalPos* inDest);
 				
-				char*		getLatStr(void);
-				char*		getLatQuadStr(void);
-				char*		getLonStr(void);
-				char*		getLonQuadStr(void);
+				char*		getLatStr(posFormat format=floatDeg_quad);		// Formatted for humans.
+				char*		getLonStr(posFormat format=floatDeg_quad);		// This one too.
 				
-				char*		showLatStr(void);			// Formatted for humans.
-				char*		showLonStr(void);			// This one too.
-				
-				void		getPos(gPosPack* inPos);
-				int		getLatDeg(void);
-				double	getLatMin(void);
-				quad		getLatQuad(void);
-				int		getLonDeg(void);
-				double	getLonMin(void);
-				quad		getLonQuad(void);
+				gPosPack	getPos(void);
+				//int		getLatDeg(void);
+				//double	getLatMin(void);
+				//quad		getLatQuad(void);
+				//int		getLonDeg(void);
+				//double	getLonMin(void);
+				//quad		getLonQuad(void);
 				double	getLatAsDbl(void);		// These last six kinda' need a 32 bit processer.
 				double	getLonAsDbl(void);		// Otherwise you may run into rounding errors.
 				int32_t	getLatAsInt32(void);		// For NMEA2k messages.
@@ -174,14 +183,15 @@ class globalPos {
 				int64_t	getLatAsInt64(void);		// For NMEA2k messages.
 				int64_t	getLonAsInt64(void);		// For NMEA2k messages.
 				
-	//protected:
-				int		latDeg;
-				double	latMin;
-				quad		latQuad;
-				int		lonDeg;
-				double	lonMin;
-				quad		lonQuad;
-				char		outStr[G_POS_BUFF_BYTES];
+	protected:
+				gPosPack ourPos;
+				//int		latDeg;
+				//double	latMin;
+				//quad		latQuad;
+				//int		lonDeg;
+				//double	lonMin;
+				//quad		lonQuad;
+				
 };
 
 
