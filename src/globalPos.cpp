@@ -223,6 +223,9 @@ void posParser::parseLat(void) {
 				degAsInt = trunc(degAsDbl);											// Save off the degree int.
 				degAsDbl = degAsDbl - degAsInt;										// Sub off the degree int.
 				minAsDbl = degMinMapper.map(degAsDbl);								// Map the remainder to minutes.
+				ourPos.latDeg	= degAsInt;												// Fill in our bits of the output.
+				ourPos.latMin	= minAsDbl;												//
+				ourPos.latQuad	= ourQuad;
 				success = true;															// We have been a success!
 			}																					//
 		break;																				//
@@ -266,13 +269,13 @@ void posParser::parseLat(void) {
 				quadStr = firstParam;													// Point quadStr at it.
 				degStr = secondParam;													// Deg str will be second.
 				minStr = thirdParam;
-			} else if (fourthParam[0]=='N'||fourthParam[0]=='S') {			// Else quad is last, only other choice we allow.
+			} else if (thirdParam[0]=='N'||thirdParam[0]=='S') {			// Else quad is last, only other choice we allow.
 				quadStr = thirdParam;													// Quad third param
 				degStr = firstParam;														// deg will be first.
 				minStr = secondParam;													// Min will be second.
 			} else {																			// else?
 				break;																		// Can't find quad, bail!
-			}																					//
+			}																				//
 			degAsInt = atoi(degStr);													// Grab degrees as an int.
 			if (degAsInt<90 && degAsInt>=0) {										// If it passes sanity check.
 				minAsDbl = atof(minStr);												// Grab minutes as a double.
@@ -286,7 +289,7 @@ void posParser::parseLat(void) {
 					ourPos.latQuad	= ourQuad;											//
 					success = true;														// We have been a success!
 				}																				//
-			}																					//
+			}
 		break;																				//
 		case 4	:																			// 
 			heapStr(&firstParam,getNextParam());									// Grab and clean the three params.
@@ -691,8 +694,6 @@ void globalPos::copyPos(globalPos* aLatLon) {
 
 	if (aLatLon) {
 		ourPos = aLatLon->getPos();
-		//copyLat(aLatLon);
-		//copyLon(aLatLon);
 	}
 }
 
@@ -890,7 +891,7 @@ void globalPos::setValid(void) {
 	}
 	if (ourPos.lonDeg<=180 && ourPos.lonDeg>=0) {
 		if (ourPos.lonMin<60 && ourPos.lonMin>=0) {
-			if (ourPos.latQuad==east || ourPos.latQuad==west) {
+			if (ourPos.lonQuad==east || ourPos.lonQuad==west) {
 				ourPos.lonValid = true;
 			}
 		}

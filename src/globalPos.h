@@ -170,12 +170,6 @@ class globalPos {
 				char*		getLonStr(posFormat format=floatDeg_quad);		// This one too.
 				
 				gPosPack	getPos(void);
-				//int		getLatDeg(void);
-				//double	getLatMin(void);
-				//quad		getLatQuad(void);
-				//int		getLonDeg(void);
-				//double	getLonMin(void);
-				//quad		getLonQuad(void);
 				double	getLatAsDbl(void);		// These last six kinda' need a 32 bit processer.
 				double	getLonAsDbl(void);		// Otherwise you may run into rounding errors.
 				int32_t	getLatAsInt32(void);		// For NMEA2k messages.
@@ -185,13 +179,7 @@ class globalPos {
 				
 	protected:
 				gPosPack ourPos;
-				//int		latDeg;
-				//double	latMin;
-				//quad		latQuad;
-				//int		lonDeg;
-				//double	lonMin;
-				//quad		lonQuad;
-				
+						
 };
 
 
