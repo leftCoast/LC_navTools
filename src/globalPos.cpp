@@ -927,26 +927,28 @@ double globalPos::trueBearingTo(globalPos* inDest) {
 	double	Y;				// Some other quantity?
 	double	deltaLon;
 	
-	latA = getLatAsDbl();																// Grab our location
-	latA = deg2rad(latA);																// Convert to radians, for doing trig.
-	lonA = getLonAsDbl();																// Other value as wel..
-	lonA = deg2rad(lonA);																// Trig..
-	
-	latB = inDest->getLatAsDbl();														// Do the same for the destination
-	latB = deg2rad(latB);																// Convert.
-	lonB = inDest->getLonAsDbl();														// Other value.
-	lonB = deg2rad(lonB);																// Convert.
-	
-	
-	deltaLon = lonB - lonA;																// Formula wants delta longitude.
-	X = cos(latB) * sin(deltaLon);													// Calculate the X thing.
-	Y = cos(latA) * sin(latB) - sin(latA) * cos(latB) * cos(deltaLon);	// Calculate the Y thing.
-	bearing = atan2(X,Y);																// Do the atan2() thing.
-	bearing = rad2deg(bearing);														// Convert it back to degrees. (For sailors)
-	if (bearing<0) {																		// Negative values?
-		bearing = 360 + bearing;														// Would this be the fix?
-	}																							// Seems so.
-	return bearing;																		// Hand it off.
+	bearing = NAN;																				// In case of mad coders..
+	if (inDest) {																				// Sanity counts!
+		latA = getLatAsDbl();																// Grab our location
+		latA = deg2rad(latA);																// Convert to radians, for doing trig.
+		lonA = getLonAsDbl();																// Other value as wel..
+		lonA = deg2rad(lonA);																// Trig..
+		
+		latB = inDest->getLatAsDbl();														// Do the same for the destination
+		latB = deg2rad(latB);																// Convert.
+		lonB = inDest->getLonAsDbl();														// Other value.
+		lonB = deg2rad(lonB);																// Convert.
+		
+		deltaLon = lonB - lonA;																// Formula wants delta longitude.
+		X = cos(latB) * sin(deltaLon);													// Calculate the X thing.
+		Y = cos(latA) * sin(latB) - sin(latA) * cos(latB) * cos(deltaLon);	// Calculate the Y thing.
+		bearing = atan2(X,Y);																// Do the atan2() thing.
+		bearing = rad2deg(bearing);														// Convert it back to degrees. (For sailors)
+		if (bearing<0) {																		// Negative values?
+			bearing = 360 + bearing;														// Would this be the fix?
+		}																							// Seems so.
+	}																								//
+	return bearing;																			// Hand it off.
 }
 
 
