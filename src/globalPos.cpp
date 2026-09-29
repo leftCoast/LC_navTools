@@ -782,7 +782,7 @@ void globalPos::setPosition(int inLatDeg, double inLatMin, quad inLatQuad, int i
 }
 
 
-// In the format DD MM.MMM	Does not look for Quadrent. See below.
+// In the format DDMM.MMM	Does not look for Quadrent. See below.
 void globalPos::setLatValue(const char* inLatStr) {
 
 	int		dotIndex;
