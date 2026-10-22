@@ -3,24 +3,26 @@
 #include <GPS_NMEA2K.h>
 #include <debug.h>
 
-	
+#define NUM_SOG_READS	10	
 navigation*		ourNavigator = NULL;
 
 
 
 navigation::navigation(netObj* inNMEA2K) {
 	
-	markMS = 0;												// Zero means no mark.
-	ourNMEA2K = inNMEA2K;								// Our net object we will use.
-	ourGPS = new GPSReader;								// We own the GPS reader, set it up.
-	ourGPS->begin();										// Give it a kick to start it.
-	ourGPS->setSpew(false);								// Shut up spew!
-	Serial1.begin(9600);									// Fire up the GPS's serial port for it.
-	while(Serial1.available()) Serial1.read();	// Flush out the GPS Serial data before letting it read nonsense.
-	barometer		= NULL;								// You know the rule about pointers starting off with NULL..
-	knotMeter 		= NULL;								//
-	depthSounder	= NULL;								//
-	haveNMEA2K = setupHandlers();						// Where else will we get speed, depth and barometer?
+	markMS = 0;													// Zero means no mark.
+	ourNMEA2K = inNMEA2K;									// Our net object we will use.
+	ourGPS = new GPSReader;									// We own the GPS reader, set it up.
+	ourGPS->begin();											// Give it a kick to start it.
+	ourGPS->setSpew(false);									// Shut up spew!
+	GPSSpeedSmooth = new runningAvg(NUM_SOG_READS);	// To see if were sitting we'll need to average this.
+	avgGPSSpeed = 0;											// We'll start at zero..
+	Serial1.begin(9600);										// Fire up the GPS's serial port for it.
+	while(Serial1.available()) Serial1.read();		// Flush out the GPS Serial data before letting it read nonsense.
+	barometer		= NULL;									// You know the rule about pointers starting off with NULL..
+	knotMeter 		= NULL;									//
+	depthSounder	= NULL;									//
+	haveNMEA2K = setupHandlers();							// Where else will we get speed, depth and barometer?
 }
 
 
@@ -29,6 +31,7 @@ navigation::~navigation(void) {
 	if (barometer) delete(barometer);
 	if (knotMeter) delete(knotMeter);
 	if (depthSounder) delete(depthSounder);
+	if (GPSSpeedSmooth) delete(GPSSpeedSmooth);
 }
 
 
@@ -116,11 +119,24 @@ globalPos navigation::getFix(void) {
 }
 
 
-float navigation::getSpeed(void) {
+// This returns the speed through the water. From the speed/depth sounder.
+float navigation::getBoatSpeed(void) {
 
 	if (haveNMEA2K) {
 		return knotMeter->knots;
 	}
+	return NAN;
+}
+
+
+// This returns the speed over ground. From the GPS.
+float navigation::getSOG(void) {
+
+	if (haveFix()) {
+		avgGPSSpeed = GPSSpeedSmooth->addData(ourGPS->groudSpeedKnots);
+		return ourGPS->groudSpeedKnots;
+	}
+	avgGPSSpeed = GPSSpeedSmooth->addData(0);
 	return NAN;
 }
 
@@ -146,6 +162,26 @@ float navigation::getCOG(bool magnetic) {
 		return ourGPS->trueCourse;
 	}
 	return NAN;
+}
+
+
+// Are we actually moving? Can we sense any movement? If either the speed/depth sounder or
+// the GPS says were moving faster than the passed in limit? We'll say yes. Otherwise it's
+// no.
+bool navigation::moving(float minSpeed) {
+
+	float	SensorSpeed;
+	float	GPSSpeed;
+	
+	SensorSpeed = 0;													// Default to no sensor speed.
+	GPSSpeed = getSOG();												// This refreshes the average value.
+	if (haveNMEA2K) {													// We got network?
+		SensorSpeed = getBoatSpeed();								// Grab the boat speed if possible.
+	}																		//
+	if (avgGPSSpeed>minSpeed || SensorSpeed>minSpeed) {	// If the average GPS or the boat speed are greater..
+		return true;													// We'll call that moving.
+	}																		//
+	return false;														// Else we're just bobbing around.
 }
 
 

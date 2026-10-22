@@ -49,8 +49,10 @@ virtual	~navigation(void);
 			
 			bool				haveFix(void);
 			globalPos		getFix(void);
-			float				getSpeed(void);
+			float				getBoatSpeed(void);
+			float				getSOG(void);
 			float				getDepth(bool fathoms);
+			bool				moving(float minSpeed=0.75);
 			float				getCOG(bool magnetic);
 			bool				getSpew(void);
 			void				setSpew(bool onOff);
@@ -71,6 +73,8 @@ protected:
 			netObj*			ourNMEA2K;
 			globalPos		destMark;
 			unsigned long	markMS;
+			runningAvg*		GPSSpeedSmooth;
+			float				avgGPSSpeed;
 			
 };
 
