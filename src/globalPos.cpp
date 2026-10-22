@@ -660,34 +660,6 @@ globalPos::~globalPos(void) {  }
 // Make sure everything is in spec.x	
 bool globalPos::valid(void) { return ourPos.latValid && ourPos.lonValid; }
 
-
-/*	
-int globalPos::writeToEEPROM(int addr) {
-
-	
-	double	value;
-	
-	value = getLatAsDbl();
-	EEPROM.put(addr,value);
-	addr = addr + sizeof(double);
-	value = getLonAsDbl();
-	EEPROM.put(addr,value);
-	return 2*sizeof(double);
-}
-
-
-int globalPos::copyFromEEPROM(int addr) {
-
-	double	value;
-	
-	EEPROM.get(addr,value);
-	setLat(value);
-	addr = addr + sizeof(double);
-	EEPROM.get(addr,value);
-	setLon(value);
-	return 2*sizeof(double);
-}
-*/
 								
 // I wanna' be like you euooo.
 void globalPos::copyPos(globalPos* aLatLon) {
