@@ -51,7 +51,7 @@ virtual	~navigation(void);
 			globalPos		getFix(void);
 			float				getBoatSpeed(void);
 			float				getSOG(void);
-			float				getDepth(bool fathoms);
+			float				getDepth(bool fathoms=true);
 			bool				moving(float minSpeed=0.75);
 			float				getCOG(bool magnetic);
 			bool				getSpew(void);
